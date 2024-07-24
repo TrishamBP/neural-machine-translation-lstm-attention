@@ -26,7 +26,7 @@ The model consists of the following main components:
 2. **Decoder**: LSTM-based decoder with cross-attention mechanism.
 3. **Cross-Attention**: Multi-head attention layer for attending to relevant parts of the encoded input.
 
-![Model Architecture](path_to_model_architecture_image.png)
+![image](https://github.com/user-attachments/assets/54b808ef-9263-439e-a963-9a1be4557f3e)
 
 ## Installation
 
@@ -92,3 +92,4 @@ This project implements Minimum Bayes Risk (MBR) decoding to improve translation
 3. The candidate with the highest average similarity is selected as the final translation.
 
 ## Results
+![image](https://github.com/user-attachments/assets/e204262f-dbb0-4f73-92ab-b30c0c6505d4)
