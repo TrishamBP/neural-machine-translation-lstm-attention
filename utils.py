@@ -1,6 +1,5 @@
 import numpy as np
 import tensorflow as tf
-import tensorflow_text as tf_text
 import pathlib
 
 path_to_file = pathlib.Path("por-eng/por.txt")
@@ -44,12 +43,21 @@ val_raw = (
 )
 
 def tf_lower_and_split_punct(text):
-    text = tf_text.normalize_utf8(text, "NFKD")
+    # Convert to lowercase
     text = tf.strings.lower(text)
-    text = tf.strings.regex_replace(text, "[^ a-z.?!,¿]", "")
-    text = tf.strings.regex_replace(text, "[.?!,¿]", r" \0 ")
+
+    # Replace non-alphanumeric characters (except space and punctuation) with empty string
+    text = tf.strings.regex_replace(text, r"[^a-z0-9 .?!,¿]", "")
+
+    # Add spaces around punctuation
+    text = tf.strings.regex_replace(text, r"([.?!,¿])", r" \1 ")
+
+    # Remove leading and trailing whitespace
     text = tf.strings.strip(text)
+
+    # Add start and end tokens
     text = tf.strings.join(["[SOS]", text, "[EOS]"], separator=" ")
+
     return text
 
 max_vocab_size = 12000
