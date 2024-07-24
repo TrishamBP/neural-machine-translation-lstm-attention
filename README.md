@@ -37,8 +37,7 @@ To set up the project, follow these steps:
 git clone https://github.com/TrishamBP/neural-machine-translation-lstm-attention.git
 ```
 2. Install the required dependencies:
-   ```
-   pip install -r requirements.txt
+```pip install -r requirements.txt```
 ## Usage
 
 To translate an English sentence to Portuguese:
@@ -46,8 +45,7 @@ To translate an English sentence to Portuguese:
 1. Ensure you have a trained model saved as 'translator_model'.
 2. Run the main script:
 
-   ```
-   python main.py
+```python main.py```
 
 4. The script will output multiple translation candidates and the selected best translation.
 
