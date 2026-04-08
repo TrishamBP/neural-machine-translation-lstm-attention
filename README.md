@@ -1,95 +1,162 @@
-# English to Portuguese Neural Machine Translation
+## 1. Project Title
+Neural Machine Translation System (English to Portuguese) with LSTM + Attention
 
-This project implements a neural machine translation system that translates English sentences to Portuguese using a sequence-to-sequence model with attention mechanism.
+## 2. Overview
+This project implements an end-to-end Neural Machine Translation (NMT) system that translates English sentences into Portuguese using a sequence-to-sequence architecture with attention.  
+It addresses a core NLP problem: learning semantic and syntactic alignment between two languages and generating fluent target-language output token by token.
 
-## Table of Contents
-- [Overview](#overview)
-- [Model Architecture](#model-architecture)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Files Description](#files-description)
-- [Training](#training)
-- [Inference](#inference)
-- [Minimum Bayes Risk Decoding](#minimum-bayes-risk-decoding)
-- [Results](#results)
+Why this matters:
+- It demonstrates how deep learning models convert raw text into structured numerical representations and back into language.
+- It captures real AI engineering concerns: data preprocessing, vectorization, sequence modeling, inference-time decoding, and output selection.
+- It includes a probabilistic decoding extension (Minimum Bayes Risk-style selection) to improve robustness beyond greedy generation.
 
+## 3. Features
+- Parallel corpus loading from `por-eng/por.txt` (Portuguese-English sentence pairs).
+- Text normalization and tokenization using `TextVectorization` with `[SOS]/[EOS]` control tokens.
+- Bidirectional LSTM encoder for contextual source representation.
+- Decoder with pre-attention LSTM, cross-attention, post-attention LSTM, and vocabulary projection.
+- Custom masked loss and masked accuracy for padded sequence training.
+- Inference with temperature-based sampling.
+- Candidate reranking using weighted overlap scoring (MBR-style decoding).
 
-## Overview
+## 4. Tech Stack
+- Python 3
+- TensorFlow / Keras
+- NumPy
+- Pandas (dependency listed; pipeline is primarily TensorFlow + NumPy)
+- `tf.data` input pipeline utilities
 
-This neural machine translation system is built using TensorFlow and implements a sequence-to-sequence model with attention for translating English sentences to Portuguese. The model uses an encoder-decoder architecture with cross-attention and implements various techniques such as Minimum Bayes Risk (MBR) decoding for improved translation quality.
+## 5. Architecture / Workflow
+```mermaid
+graph TD
+A["Raw parallel corpus (por-eng/por.txt)"] --> B["Load and split pairs (utils.py)"]
+B --> C["Text standardization + vectorization"]
+C --> D["tf.data batching: ((context, target_in), target_out)"]
+D --> E["Encoder: Embedding + BiLSTM"]
+E --> F["Decoder: Embedding + pre-attention LSTM"]
+F --> G["Cross-Attention (query=decoder, value=encoder)"]
+G --> H["Post-attention LSTM + Dense(log_softmax)"]
+H --> I["Masked loss/accuracy training"]
+I --> J["Inference: token-by-token decoding"]
+J --> K["Multiple sampled candidates"]
+K --> L["Weighted overlap reranking (MBR-style)"]
+L --> M["Final Portuguese translation"]
+```
 
-## Model Architecture
+## 6. Project Structure
+```text
+neural-machine-translation-lstm-attention/
+|-- main.py                # Inference entry point + candidate generation + MBR-style selection
+|-- training.py            # Model compile/train routine and trained_translator object
+|-- translator.py          # Top-level Translator (Encoder + Decoder)
+|-- encoder.py             # Encoder layer (Embedding + Bidirectional LSTM)
+|-- decoder.py             # Decoder layer with attention and output projection
+|-- cross_attention.py     # Cross-attention block (MHA + residual + layer norm)
+|-- utils.py               # Data loading, preprocessing, vectorizers, metrics, text utilities
+|-- requirements.txt       # Python dependencies
+|-- por-eng/
+|   `-- por.txt            # Parallel corpus file
+`-- README.md
+```
 
-The model consists of the following main components:
-
-1. **Encoder**: Bidirectional LSTM that processes the input English sentence.
-2. **Decoder**: LSTM-based decoder with cross-attention mechanism.
-3. **Cross-Attention**: Multi-head attention layer for attending to relevant parts of the encoded input.
-
-![image](https://github.com/user-attachments/assets/54b808ef-9263-439e-a963-9a1be4557f3e)
-
-## Installation
-
-To set up the project, follow these steps:
-
-1. Clone the repository:
-```agsl
+## 7. Installation
+```bash
 git clone https://github.com/TrishamBP/neural-machine-translation-lstm-attention.git
-```
-2. Install the required dependencies:
-```pip install -r requirements.txt```
-## Usage
-
-To translate an English sentence to Portuguese:
-
-1. Ensure you have a trained model saved as 'translator_model'.
-2. Run the main script:
-
-```asgl 
-python main.py
+cd neural-machine-translation-lstm-attention
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# Linux/macOS
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-4. The script will output multiple translation candidates and the selected best translation.
+## 8. Usage
+This codebase trains and runs in script-driven mode.
 
-## Files Description
-
-- `main.py`: The main script for running translations and MBR decoding.
-- `utils.py`: Utility functions for data loading, preprocessing, and evaluation metrics.
-- `training.py`: Script for training the translator model.
-- `translator.py`: Defines the main Translator model.
-- `encoder.py`: Implementation of the Encoder class.
-- `decoder.py`: Implementation of the Decoder class.
-- `cross_attention.py`: Implementation of the CrossAttention layer.
-
-## Training
-
-The model is trained using the following process:
-
-1. Data is loaded and preprocessed from a Portuguese-English parallel corpus.
-2. The model is compiled with Adam optimizer and custom loss and accuracy functions.
-3. Training is performed with early stopping based on validation loss.
-
-To train the model:
-
-```
+Train the model:
+```bash
 python training.py
 ```
 
-## Inference
+Run interactive translation:
+```bash
+python main.py
+```
 
-The trained model can be used for inference as follows:
+When prompted:
+```text
+Enter an English sentence to translate:
+```
 
-1. Load the trained model.
-2. Use the `translate` function to generate a translation for an input English sentence.
-3. Optionally use MBR decoding for improved translation quality.
+The script will:
+1. Generate multiple translation candidates via sampling.
+2. Score candidate consistency with overlap-based metrics.
+3. Print all candidates and the selected translation.
 
-## Minimum Bayes Risk Decoding
+## 9. Example Output
+Illustrative runtime pattern:
+```text
+Enter an English sentence to translate: How are you?
 
-This project implements Minimum Bayes Risk (MBR) decoding to improve translation quality:
+Translation candidates:
+[candidate 1...]
+[candidate 2...]
+[candidate 3...]
+...
 
-1. Multiple translation candidates are generated.
-2. Candidates are scored based on their similarity to other candidates.
-3. The candidate with the highest average similarity is selected as the final translation.
+Selected translation: [best candidate chosen by weighted overlap]
+```
 
-## Results
-![image](https://github.com/user-attachments/assets/e204262f-dbb0-4f73-92ab-b30c0c6505d4)
+## 10. Engineering Insights
+- Modular decomposition: Encoder, Decoder, Attention, and orchestration are isolated into separate files for maintainability and experimentation.
+- Data pipeline design: `tf.data` mapping from raw sentence pairs to shifted target tensors supports teacher-forced sequence learning.
+- Numerically stable training objective: masked sequence loss excludes padding tokens from optimization and metrics.
+- Decoding strategy: temperature sampling introduces diversity; reranking selects high-consensus outputs.
+- Trade-off: importing `training.py` triggers training immediately (`trained_translator` is created at import time), which is simple for demos but not ideal for production separation of train vs serve.
+- Scalability direction: architecture can evolve toward larger vocabularies, subword tokenization, checkpointing, and service-style inference endpoints.
+
+## 11. Learning Journey & AI/ML Foundations
+### A. Computational & Mathematical Foundations
+This project reflects a strong foundation in:
+- Mathematical modeling of sequence transduction problems.
+- Numerical computation over tensors (vectorized operations, masked objectives, probability-space decoding).
+- Algorithmic problem-solving through custom decoding/reranking logic.
+- Matrix-oriented thinking central to modern ML workflows (embedding spaces, recurrent state transitions, attention operations).
+- Structured data processing mindset aligned with practical ETL and tensor pipeline construction.
+
+### B. Current Academic Direction
+I am currently pursuing an M.Tech in AI/ML, with focus areas including:
+- Machine Learning
+- Deep Learning
+- Natural Language Processing
+- AI Systems Engineering
+
+### C. Self-Driven Learning Narrative
+This project is part of my self-driven transition into AI/ML engineering.  
+I intentionally build and ship hands-on systems to deepen understanding of model internals, training behavior, and inference-time decision logic rather than treating ML as a black box.
+
+### D. Project -> AI/ML Mapping
+- Sequence modeling implementation -> foundation for modern NLP systems.
+- Attention mechanism design -> core concept behind scalable neural architectures.
+- Numerical decoding/reranking -> practical approximation to decision-theoretic inference.
+- Pipeline orchestration -> transferable to production ML systems and backend AI services.
+
+### E. Narrative Positioning
+This project is part of my transition into AI/ML, where I apply strong foundations in computational modeling and numerical methods to build scalable and intelligent systems.
+
+### F. Core Insight
+Even before specializing in AI/ML, I was working with computational algorithms, numerical methods, and system modeling, which form the backbone of modern machine learning systems.
+
+## 12. Challenges & Learnings
+- Handling variable-length sequences required careful masking in both loss and accuracy metrics.
+- Building reliable inference highlighted the gap between training-time teacher forcing and autoregressive generation behavior.
+- Candidate generation improved diversity, but required an additional scoring layer to improve final output consistency.
+- Separating concerns across files improved readability and made architecture-level experimentation easier.
+
+## 13. Future Improvements
+- Replace whitespace tokenization with subword methods (e.g., SentencePiece/BPE) for better OOV handling.
+- Add checkpointing/model serialization and explicit train/eval/infer CLI modes.
+- Introduce beam search and compare against current overlap-based reranking.
+- Add evaluation metrics such as BLEU/ROUGE on validation/test splits with reproducible experiment tracking.
+- Expose inference through an API service to integrate with larger AI pipelines and intelligent applications.
